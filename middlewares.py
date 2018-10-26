@@ -131,3 +131,29 @@ DOWNLOADER_MIDDLEWARES = {
     'projectName.middlewares.DownloaderMiddleware': 420,
 
 }
+
+
+
+from datetime import datetime
+# 日志文件
+# LOG_FILE = '自定义名称.log'
+date = datetime.now()
+LOG_FILE = "log/scrapy-{}-{}-{}.log".format(date.year, date.month, date.day)
+# 日志等级 最低级别
+LOG_LEVEL = 'INFO'
+# 是否启用日志（创建日志后，不需开启，进行配置）
+LOG_ENABLED = False  # （默认为True，启用日志）
+# 日志编码
+LOG_ENCODING = 'utf-8'
+
+# 如果是True ，进程当中，所有标准输出（包括错误）将会被重定向到log中
+# 例如：在爬虫代码中的 print（）
+LOG_STDOUT = False  # (默认为False)
+
+# 等级分为5个级别    （大写）
+# 最高等级5 - -严重错误 - -critical（CRITICAL）
+# 等级4 - -----一般错误 - -error(ERROR)
+# 等级3 - -----警告错误 - -warning(WARNING)
+# 等级2 - -----一般信息 - -info(INFO)
+# 等级1 - -----调试信息 - -debug(DEBUG)
+
