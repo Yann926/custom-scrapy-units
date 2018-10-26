@@ -1,30 +1,49 @@
-# middlewares.py
+# -*- coding: utf-8 -*-
+
+# Define here the models for your spider middleware
+#
+# See documentation in:
+# https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 import random
 import base64
 import logging
 import time
 
-from scrapy.contrib.downloadermiddleware.useragent import UserAgentMiddleware
-from scrapy.contrib.downloadermiddleware.httpproxy import HttpProxyMiddleware
+from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
+from scrapy.downloadermiddlewares.httpproxy import HttpProxyMiddleware
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
+from scrapy.spidermiddlewares import httperror
 
-from config import PROXIES,USER_AGENTS
+from .config import PROXIES,USER_AGENTS
 
 logger = logging.getLogger(__name__)
 
 class RandomUserAgent(UserAgentMiddleware):
     def __init__(self):
-        self.user_agent_list = USER_AGENTS
+        self.user_agent_list = random.choice(USER_AGENTS)
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return crawler
+
+    def spider_opened(self, spider):
+        self.user_agent = getattr(spider, 'user_agent', self.user_agent)
 
     def process_request(self, request, spider):
         user_agent = random.choice(self.user_agent_list)
         if user_agent:
-            request.headers.setdefault('User-Agent', user_agent)
+            # request.headers.setdefault('User-Agent', user_agent)
+            request.headers.setdefault(b'User-Agent', self.user_agent)
 
 
 class RandomProxy(HttpProxyMiddleware):
     def __init__(self):
         self.proxy = random.choice(PROXIES)
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return crawler
+
 
     def process_request(self, request, spider):
         if self.proxy["user:pwd"]:
@@ -34,7 +53,7 @@ class RandomProxy(HttpProxyMiddleware):
             encoded_user_pass = base64.b64encode(proxy_user_pwd)
             # set request's parameters
             request.meta['proxy'] = self.proxy["proxy"] # "https://183.151.41.66:1133"
-            request.headers['Proxy-Authorization'] = 'Basic ' + encoded_user_pass
+            request.headers['Proxy-Authorization'] = b'Basic ' + encoded_user_pass
 
         else:
             print("Public Proxy...")
@@ -91,7 +110,7 @@ class DownloaderMiddleware(RetryMiddleware):
             logger.error("Exception Type: ",exception," ExceptionRequestUrl: ",request.url," Time: ",time.ctime())
             return self._retry(request, exception, spider)
         else:
-            logger.info("Other Exception: ",exception)
+            logger.warning("Other Exception: ",exception)
 
     def _retry(self, request, reason, spider):
         retries = request.meta.get('retry_times', 0) + 1
@@ -134,26 +153,25 @@ DOWNLOADER_MIDDLEWARES = {
 
 
 
-from datetime import datetime
-# 日志文件
-# LOG_FILE = '自定义名称.log'
-date = datetime.now()
-LOG_FILE = "log/scrapy-{}-{}-{}.log".format(date.year, date.month, date.day)
-# 日志等级 最低级别
-LOG_LEVEL = 'INFO'
-# 是否启用日志（创建日志后，不需开启，进行配置）
-LOG_ENABLED = False  # （默认为True，启用日志）
-# 日志编码
-LOG_ENCODING = 'utf-8'
-
-# 如果是True ，进程当中，所有标准输出（包括错误）将会被重定向到log中
-# 例如：在爬虫代码中的 print（）
-LOG_STDOUT = False  # (默认为False)
-
-# 等级分为5个级别    （大写）
-# 最高等级5 - -严重错误 - -critical（CRITICAL）
-# 等级4 - -----一般错误 - -error(ERROR)
-# 等级3 - -----警告错误 - -warning(WARNING)
-# 等级2 - -----一般信息 - -info(INFO)
-# 等级1 - -----调试信息 - -debug(DEBUG)
-
+# from datetime import datetime
+# # 日志文件
+# # LOG_FILE = '自定义名称.log'
+# date = datetime.now()
+# LOG_FILE = "log/scrapy-{}-{}-{}.log".format(date.year, date.month, date.day)
+# # 日志等级 最低级别
+# LOG_LEVEL = 'INFO'
+# # 是否启用日志（创建日志后，不需开启，进行配置）
+# LOG_ENABLED = False  # （默认为True，启用日志）
+# # 日志编码
+# LOG_ENCODING = 'utf-8'
+#
+# # 如果是True ，进程当中，所有标准输出（包括错误）将会被重定向到log中
+# # 例如：在爬虫代码中的 print（）
+# LOG_STDOUT = False  # (默认为False)
+#
+# # 等级分为5个级别    （大写）
+# # 最高等级5 - -严重错误 - -critical（CRITICAL）
+# # 等级4 - -----一般错误 - -error(ERROR)
+# # 等级3 - -----警告错误 - -warning(WARNING)
+# # 等级2 - -----一般信息 - -info(INFO)
+# # 等级1 - -----调试信息 - -debug(DEBUG)
